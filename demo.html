@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <script src="../webcomponentsjs/webcomponents-lite.js"></script>
+    <link rel="import" href="../cg-polymer-patches/cg-polymer-patches.html">
+    <link rel="import" href="../cg-task/cg-task-manager.html">
+    <link rel="import" href="cg-task-upload-factory.html">
+</head>
+<body>
+
+<template is="dom-bind" id="sandbox">
+    <div id="dropzone" style="width:100px;height:100px;border:1px solid black"></div>
+    <cg-task-manager id="manager" loop-delay="1000" max-concurrent="3"></cg-task-manager>
+</template>
+
+<script>
+    window.addEventListener('WebComponentsReady', function() {
+        var sandbox =  document.querySelector("#sandbox");
+
+        var dropzone = new Dropzone(document.getElementById("dropzone"), {
+            url: this.uploadUrl || "#",
+            autoProcessQueue: false,
+            previewsContainer:false,
+            uploadMultiple:false,
+        });
+        dropzone.on("addedfile", function(file) {
+            dropzone.accept(file, function(error) {
+                var task = CGUploadTaskFactory.task("/documents/upload", file, function(event, data, task, file){
+                    console.log("event", event, "data", JSON.stringify(data), "file", file.name);
+                });
+                sandbox.$.manager.scheduleTask(task);
+            }.bind(this));
+        }.bind(this));
+
+    });
+</script>
+</body>
+</html>

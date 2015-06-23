@@ -1,0 +1,54 @@
+<link rel="import" href="../cg-utils/cg.html">
+<link rel="import" href="../cg-behaviors/cg-base-behavior.html">
+<script src="../dropzone/dist/min/dropzone.min.js"></script>
+
+<script>
+    var CGUploadTaskFactory = {
+        _dropzones:{},
+        _tasks:{},
+        task:function(uploadUrl, file, callback){
+            this._dropzones[uploadUrl] = this._dropzones[uploadUrl] || this._createDZ(uploadUrl);
+            file._cgId = CG.Utils.Generators.id();
+            var task = new Task("Upload " + file.name, function(task, file, dz){
+                dz.processFile(file);
+            }, [file, this._dropzones[uploadUrl]], this, function(event, data, task){
+                callback(event, data, task, file);
+            });
+            this._tasks[file._cgId] = task;
+            return task;
+        },
+        _createDZ:function(uploadUrl){
+            var container = document.createElement("div");
+            document.body.appendChild(container);
+            var dz = new Dropzone(container, {
+                url: uploadUrl,
+                autoProcessQueue: true,
+                previewsContainer:false,
+                uploadMultiple:false,
+            });
+
+            dz.on("uploadprogress", function(file, progress, bytes){
+                var task = this._tasks[file._cgId];
+                task && task.progress(progress);
+                if(task.canceled) {
+                    dz.cancelUpload(file);
+                }
+            }.bind(this));
+            dz.on("error", function(file, message, xhr){
+                var task = this._tasks[file._cgId];
+                task && task.error(message);
+            }.bind(this));
+            dz.on("success", function(file, responseText, e){
+                var task = this._tasks[file._cgId];
+                task && task.success(responseText);
+                delete this._tasks[file._cgId];
+            }.bind(this));
+            dz.on("canceled", function(file){
+                var task = this._tasks[file._cgId];
+                task && task.cancel();
+            }.bind(this));
+
+            return dz;
+        }
+    }
+</script>
