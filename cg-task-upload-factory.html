@@ -4,13 +4,13 @@
 <script src="../dropzone/dist/min/dropzone.min.js"></script>
 
 <script>
-    var CGUploadTaskFactory = {
+    CG.UploadTaskFactory = {
         _dropzones:{},
         _tasks:{},
         task:function(uploadUrl, file, callback){
             this._dropzones[uploadUrl] = this._dropzones[uploadUrl] || this._createDZ(uploadUrl);
             file._cgId = CG.Utils.Generators.id();
-            var task = new Task("Upload " + file.name, function(task, file, dz){
+            var task = new CG.Task("Upload " + file.name, function(task, file, dz){
                 dz.processFile(file);
             }, [file, this._dropzones[uploadUrl]], this, function(event, data, task){
                 callback(event, data, task, file);
