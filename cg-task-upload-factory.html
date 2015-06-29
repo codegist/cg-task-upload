@@ -15,6 +15,12 @@
             }, [file, this._dropzones[uploadUrl]], this, function(event, data, task){
                 callback(event, data, task, file);
             });
+            var that = this;
+            var taskCancel = task.cancel;
+            task.cancel = function(){
+                that._dropzones[uploadUrl].cancelUpload(file);
+                taskCancel.apply(this, arguments);
+            };
             this._tasks[file._cgId] = task;
             return task;
         },
@@ -27,7 +33,6 @@
                 previewsContainer:false,
                 uploadMultiple:false,
             });
-
             dz.on("uploadprogress", function(file, progress, bytes){
                 var task = this._tasks[file._cgId];
                 task && task.progress(progress);
