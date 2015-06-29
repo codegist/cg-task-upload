@@ -13,8 +13,11 @@
             var task = new CG.Task("Upload " + file.name, function(task, file, dz){
                 dz.processFile(file);
             }, [file, this._dropzones[uploadUrl]], this, function(event, data, task){
+                if(event == "finished" && data.discarded) {
+                    delete this._tasks[file._cgId];
+                }
                 callback(event, data, task, file);
-            });
+            }.bind(this));
             var that = this;
             var taskCancel = task.cancel;
             task.cancel = function(){
