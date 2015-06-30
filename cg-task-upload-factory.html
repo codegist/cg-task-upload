@@ -13,7 +13,7 @@
             var task = new CG.Task("Upload " + file.name, function(task, file, dz){
                 dz.processFile(file);
             }, [file, this._dropzones[uploadUrl]], this, function(event, data, task){
-                if(event == "finished" && data.discarded) {
+                if(event == "finished" && data.state == "discarded") {
                     delete this._tasks[file._cgId];
                 }
                 callback(event, data, task, file);
@@ -39,13 +39,13 @@
             dz.on("uploadprogress", function(file, progress, bytes){
                 var task = this._tasks[file._cgId];
                 task && task.progress(progress);
-                if(task.canceled) {
+                if(task.state == "canceled") {
                     dz.cancelUpload(file);
                 }
             }.bind(this));
             dz.on("error", function(file, message, xhr){
                 var task = this._tasks[file._cgId];
-                task && task.error(message);
+                task && task.fail(message);
             }.bind(this));
             dz.on("success", function(file, responseText, e){
                 var task = this._tasks[file._cgId];
