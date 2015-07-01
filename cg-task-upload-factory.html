@@ -23,7 +23,7 @@
         },
         _createDZ:function(uploadUrl){
             var container = document.createElement("div");
-            document.body.appendChild(container);
+            Polymer.dom(document.body).appendChild(container);
             var dz = new Dropzone(container, {
                 url: uploadUrl,
                 autoProcessQueue: true,
@@ -35,16 +35,16 @@
                 if(file._cgTask.state == "canceled") {
                     dz.cancelUpload(file);
                 }
-            }.bind(this));
+            });
             dz.on("error", function(file, message, xhr){
                 file._cgTask.fail(message);
-            }.bind(this));
+            });
             dz.on("success", function(file, responseText, e){
                 file._cgTask.success(responseText);
-            }.bind(this));
+            });
             dz.on("canceled", function(file){
                 file._cgTask.cancel();
-            }.bind(this));
+            });
             return dz;
         }
     }
