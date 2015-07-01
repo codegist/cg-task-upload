@@ -6,25 +6,19 @@
 <script>
     CG.UploadTaskFactory = {
         _dropzones:{},
-        _tasks:{},
         task:function(uploadUrl, file, callback){
             this._dropzones[uploadUrl] = this._dropzones[uploadUrl] || this._createDZ(uploadUrl);
-            file._cgId = CG.Utils.Generators.id();
             var task = new CG.Task("Upload " + file.name, function(task, file, dz){
                 dz.processFile(file);
             }, [file, this._dropzones[uploadUrl]], this, function(event, data, task){
-                if(event == "finished" && data.state == "discarded") {
-                    delete this._tasks[file._cgId];
-                }
                 callback(event, data, task, file);
             }.bind(this));
-            var that = this;
             var taskCancel = task.cancel;
             task.cancel = function(){
-                that._dropzones[uploadUrl].cancelUpload(file);
-                taskCancel.apply(this, arguments);
-            };
-            this._tasks[file._cgId] = task;
+                this._dropzones[uploadUrl].cancelUpload(file);
+                taskCancel.apply(task, arguments);
+            }.bind(this);
+            file._cgTask = task;
             return task;
         },
         _createDZ:function(uploadUrl){
@@ -37,26 +31,20 @@
                 uploadMultiple:false,
             });
             dz.on("uploadprogress", function(file, progress, bytes){
-                var task = this._tasks[file._cgId];
-                task && task.progress(progress);
-                if(task.state == "canceled") {
+                file._cgTask.progress(progress);
+                if(file._cgTask.state == "canceled") {
                     dz.cancelUpload(file);
                 }
             }.bind(this));
             dz.on("error", function(file, message, xhr){
-                var task = this._tasks[file._cgId];
-                task && task.fail(message);
+                file._cgTask.fail(message);
             }.bind(this));
             dz.on("success", function(file, responseText, e){
-                var task = this._tasks[file._cgId];
-                task && task.success(responseText);
-                delete this._tasks[file._cgId];
+                file._cgTask.success(responseText);
             }.bind(this));
             dz.on("canceled", function(file){
-                var task = this._tasks[file._cgId];
-                task && task.cancel();
+                file._cgTask.cancel();
             }.bind(this));
-
             return dz;
         }
     }
